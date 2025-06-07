@@ -17,15 +17,15 @@ A modern and user-friendly IPTV management application. Easily manage, edit, and
 ## Requirements
 
 - Node.js 18.0 or higher
-- npm or yarn
+- npm, yarn or pnpm
 - A modern web browser (Chrome, Firefox, Safari, Edge)
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/myniqx/iptv-manager.git
-cd iptv-manager
+git clone https://github.com/myniqx/react-iptv.git
+cd react-iptv
 ```
 2. Install dependencies:
 ```bash
