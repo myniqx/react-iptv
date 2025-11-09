@@ -10,7 +10,7 @@ Cross-platform IPTV player development progress tracker.
 
 | Platform | Core | UI/UX | P2P Remote | Total |
 |----------|------|-------|------------|-------|
-| **Desktop** | 90% | 95% | 0% | **75%** |
+| **Desktop** | 95% | 95% | 0% | **80%** |
 | **Tizen TV** | 0% | 0% | 0% | **0%** |
 | **Android** | 0% | 0% | 0% | **0%** |
 
@@ -67,8 +67,8 @@ None currently
 - ✅ Recent tracking (30-day window)
 - ✅ Watch history + resume playback
 - ✅ Auto-save video position
-- ❌ Series episode grouping
-- ❌ Season/Episode sorting
+- ✅ Series episode grouping
+- ✅ Season/Episode sorting
 
 #### Search & Filter
 - ✅ Search input (title, group)
@@ -79,11 +79,11 @@ None currently
 
 #### Player Enhancements
 - ✅ Auto-resume from last position
-- ❌ Next/Previous episode
-- ❌ Auto-play next episode
-- ❌ Remember volume level
+- ✅ Next/Previous episode
+- ✅ Auto-play next episode
+- ✅ Remember volume level
 - ❌ Remember subtitle/audio tracks
-- ❌ Retry failed streams
+- ✅ Retry failed streams
 - ✅ Detailed error messages
 
 #### P2P Remote Control
@@ -255,6 +255,13 @@ None currently
 - Debounced search input (300ms)
 - React.memo optimization for content cards
 - Lazy loading images for better performance
+- Series episode grouping and sorting (S01E01, S01E02, etc.)
+- Next/Previous episode navigation buttons
+- Auto-play next episode (configurable in settings)
+- Volume level persistence across sessions
+- Auto-retry failed streams (exponential backoff, 3 attempts)
+- Detailed error messages for different failure types
+- Enhanced series display in player controls
 
 ### Tizen
 - Not started
