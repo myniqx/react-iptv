@@ -43,6 +43,28 @@ export function VideoPlayer() {
     }
   }, [volume, defaultVolume, setDefaultVolume]);
 
+  // Save/restore track preferences
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !currentItem) return;
+
+    // Restore track preferences from localStorage
+    const savedTracks = localStorage.getItem('zenith-track-preferences');
+    if (savedTracks) {
+      try {
+        const { audioTrack, subtitleTrack } = JSON.parse(savedTracks);
+        if (audioTrack !== undefined) {
+          usePlayerStore.getState().setAudioTrack(audioTrack);
+        }
+        if (subtitleTrack !== undefined) {
+          usePlayerStore.getState().setSubtitleTrack(subtitleTrack);
+        }
+      } catch (e) {
+        console.error('Failed to restore track preferences:', e);
+      }
+    }
+  }, [currentItem]);
+
   // Retry stream function
   const retryStream = () => {
     const video = videoRef.current;
