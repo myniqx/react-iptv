@@ -1,7 +1,9 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const { getDatabase } = require('./database');
 
 let mainWindow;
+let db;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -31,10 +33,20 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  // Initialize database
+  db = getDatabase();
+  db.init();
+
+  // Setup IPC handlers
+  setupIPCHandlers();
+
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
+    db?.close();
     app.quit();
   }
 });
@@ -44,3 +56,34 @@ app.on('activate', () => {
     createWindow();
   }
 });
+
+app.on('before-quit', () => {
+  db?.close();
+});
+
+// IPC Handlers
+function setupIPCHandlers() {
+  // Profiles
+  ipcMain.handle('db:getProfiles', () => db.getProfiles());
+  ipcMain.handle('db:addProfile', (_, name, url) => db.addProfile(name, url));
+  ipcMain.handle('db:deleteProfile', (_, id) => db.deleteProfile(id));
+
+  // Items
+  ipcMain.handle('db:getItemsByProfile', (_, profileId) => db.getItemsByProfile(profileId));
+  ipcMain.handle('db:upsertItems', (_, profileId, items) => db.upsertItems(profileId, items));
+  ipcMain.handle('db:updateProfileSync', (_, profileId, count) => db.updateProfileSync(profileId, count));
+
+  // Recent
+  ipcMain.handle('db:getRecentItems', (_, profileId) => db.getRecentItems(profileId));
+  ipcMain.handle('db:addToRecent', (_, itemUrls) => db.addToRecent(itemUrls));
+
+  // Favorites
+  ipcMain.handle('db:toggleFavorite', (_, itemUrl) => db.toggleFavorite(itemUrl));
+  ipcMain.handle('db:getFavorites', (_, profileId) => db.getFavorites(profileId));
+
+  // Watch History
+  ipcMain.handle('db:saveWatchProgress', (_, itemUrl, position, duration) =>
+    db.saveWatchProgress(itemUrl, position, duration)
+  );
+  ipcMain.handle('db:getWatchHistory', (_, itemUrl) => db.getWatchHistory(itemUrl));
+}
