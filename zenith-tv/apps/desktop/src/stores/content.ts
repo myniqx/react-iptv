@@ -1,66 +1,73 @@
 import { create } from 'zustand';
 import type { WatchableItem } from '@zenith-tv/types';
+import { db } from '../services/database';
 
-type CategoryType = 'all' | 'movies' | 'series' | 'live' | 'favorites' | 'recent';
+export type CategoryType = 'all' | 'movies' | 'series' | 'live' | 'favorites' | 'recent';
 
 interface ContentState {
   items: WatchableItem[];
+  recentItems: WatchableItem[];
+  favoritesItems: WatchableItem[];
   currentCategory: CategoryType;
   isLoading: boolean;
+  currentProfileId: number | null;
 
   // Actions
-  setItems: (items: WatchableItem[]) => void;
+  loadItemsForProfile: (profileId: number) => Promise<void>;
+  loadRecent: (profileId: number) => Promise<void>;
+  loadFavorites: (profileId: number) => Promise<void>;
   setCategory: (category: CategoryType) => void;
   getFilteredItems: () => WatchableItem[];
-  toggleFavorite: (url: string) => void;
+  toggleFavorite: (url: string) => Promise<void>;
+  clearItems: () => void;
 }
 
-// Mock data for demonstration
-const mockItems: WatchableItem[] = [
-  {
-    title: 'Action Movie 2024',
-    url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-    group: 'Action Movies',
-    logo: undefined,
-    category: { type: 'movie' },
-    profileId: 1,
-    addedDate: new Date(),
-    isFavorite: false,
-  },
-  {
-    title: 'Breaking Bad S01E01',
-    url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-    group: 'TV Series',
-    category: {
-      type: 'series',
-      episode: { seriesName: 'Breaking Bad', season: 1, episode: 1 },
-    },
-    profileId: 1,
-    addedDate: new Date(),
-    isFavorite: true,
-  },
-  {
-    title: 'News Channel HD',
-    url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-    group: 'News',
-    category: { type: 'live_stream' },
-    profileId: 1,
-    addedDate: new Date(),
-    isFavorite: false,
-  },
-];
-
 export const useContentStore = create<ContentState>((set, get) => ({
-  items: mockItems,
+  items: [],
+  recentItems: [],
+  favoritesItems: [],
   currentCategory: 'all',
   isLoading: false,
+  currentProfileId: null,
 
-  setItems: (items) => set({ items }),
+  loadItemsForProfile: async (profileId) => {
+    set({ isLoading: true, currentProfileId: profileId });
+    try {
+      const items = await db.getItemsByProfile(profileId);
+      set({ items });
+
+      // Also load recent and favorites
+      await get().loadRecent(profileId);
+      await get().loadFavorites(profileId);
+    } catch (error) {
+      console.error('Failed to load items:', error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  loadRecent: async (profileId) => {
+    try {
+      const recentItems = await db.getRecentItems(profileId);
+      set({ recentItems });
+    } catch (error) {
+      console.error('Failed to load recent items:', error);
+    }
+  },
+
+  loadFavorites: async (profileId) => {
+    try {
+      const favoritesItems = await db.getFavorites(profileId);
+      set({ favoritesItems });
+    } catch (error) {
+      console.error('Failed to load favorites:', error);
+    }
+  },
 
   setCategory: (category) => set({ currentCategory: category }),
 
   getFilteredItems: () => {
-    const { items, currentCategory } = get();
+    const { items, recentItems, favoritesItems, currentCategory } = get();
 
     switch (currentCategory) {
       case 'all':
@@ -72,21 +79,41 @@ export const useContentStore = create<ContentState>((set, get) => ({
       case 'live':
         return items.filter((item) => item.category.type === 'live_stream');
       case 'favorites':
-        return items.filter((item) => item.isFavorite);
+        return favoritesItems;
       case 'recent':
-        return [...items].sort(
-          (a, b) => b.addedDate.getTime() - a.addedDate.getTime()
-        ).slice(0, 20);
+        return recentItems;
       default:
         return items;
     }
   },
 
-  toggleFavorite: (url) => {
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.url === url ? { ...item, isFavorite: !item.isFavorite } : item
-      ),
-    }));
+  toggleFavorite: async (url) => {
+    const { currentProfileId } = get();
+    if (!currentProfileId) return;
+
+    try {
+      const isFavorite = await db.toggleFavorite(url);
+
+      // Update local state
+      set((state) => ({
+        items: state.items.map((item) =>
+          item.url === url ? { ...item, isFavorite } : item
+        ),
+      }));
+
+      // Reload favorites list
+      await get().loadFavorites(currentProfileId);
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  },
+
+  clearItems: () => {
+    set({
+      items: [],
+      recentItems: [],
+      favoritesItems: [],
+      currentProfileId: null,
+    });
   },
 }));
