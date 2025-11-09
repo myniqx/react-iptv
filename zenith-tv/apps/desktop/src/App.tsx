@@ -8,12 +8,17 @@ import { Settings } from './components/Settings';
 import { useProfilesStore } from './stores/profiles';
 import { useContentStore } from './stores/content';
 import { usePlayerStore } from '@zenith-tv/ui/src/stores/player';
+import { useDebounce } from './hooks/useDebounce';
 
 function App() {
   const [showProfileManager, setShowProfileManager] = useState(false);
   const [showBrowser, setShowBrowser] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Debounce search query for performance
+  const debouncedSearchQuery = useDebounce(localSearchQuery, 300);
 
   const {
     profiles,
@@ -32,7 +37,6 @@ function App() {
     setCategory,
     getFilteredItems,
     toggleFavorite,
-    searchQuery,
     setSearchQuery,
     sortBy,
     setSortBy,
@@ -54,6 +58,11 @@ function App() {
       setShowProfileManager(true);
     }
   }, [profiles.length]);
+
+  // Apply debounced search query to store
+  useEffect(() => {
+    setSearchQuery(debouncedSearchQuery);
+  }, [debouncedSearchQuery, setSearchQuery]);
 
   // Keyboard shortcut for search (Ctrl+F)
   useEffect(() => {
@@ -146,8 +155,8 @@ function App() {
               <input
                 ref={searchInputRef}
                 type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={localSearchQuery}
+                onChange={(e) => setLocalSearchQuery(e.target.value)}
                 placeholder="Search by title or group... (Ctrl+F)"
                 className="w-full px-4 py-1.5 pl-10 bg-gray-700 border border-gray-600 rounded
                          text-white placeholder-gray-400 focus:outline-none focus:border-blue-500
@@ -160,9 +169,9 @@ function App() {
               >
                 <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
               </svg>
-              {searchQuery && (
+              {localSearchQuery && (
                 <button
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => setLocalSearchQuery('')}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">

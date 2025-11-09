@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { WatchableItem } from '@zenith-tv/types';
 
 interface ContentGridProps {
@@ -57,7 +58,7 @@ interface ContentCardProps {
   onToggleFavorite?: (url: string) => void;
 }
 
-function ContentCard({ item, onClick, onToggleFavorite }: ContentCardProps) {
+const ContentCard = memo(function ContentCard({ item, onClick, onToggleFavorite }: ContentCardProps) {
   const getCategoryBadge = () => {
     if (item.category.type === 'live_stream') {
       return { text: 'LIVE', color: 'bg-red-500' };
@@ -86,6 +87,7 @@ function ContentCard({ item, onClick, onToggleFavorite }: ContentCardProps) {
           <img
             src={item.logo}
             alt={item.title}
+            loading="lazy"
             className="w-full h-full object-cover"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
@@ -150,4 +152,4 @@ function ContentCard({ item, onClick, onToggleFavorite }: ContentCardProps) {
       </div>
     </div>
   );
-}
+});
