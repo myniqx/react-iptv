@@ -109,7 +109,7 @@ None currently
 
 #### UI/UX Polish
 - ✅ Toast notifications (success, error, info, warning)
-- ❌ Skeleton loaders
+- ✅ Skeleton loaders
 - ✅ Progress bar for M3U download
 - ✅ Loading states for DB operations
 - ❌ Keyboard navigation (Tab, Arrow keys)
