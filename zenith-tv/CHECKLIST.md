@@ -10,7 +10,7 @@ Cross-platform IPTV player development progress tracker.
 
 | Platform | Core | UI/UX | P2P Remote | Total |
 |----------|------|-------|------------|-------|
-| **Desktop** | 80% | 70% | 0% | **60%** |
+| **Desktop** | 85% | 85% | 0% | **70%** |
 | **Tizen TV** | 0% | 0% | 0% | **0%** |
 | **Android** | 0% | 0% | 0% | **0%** |
 
@@ -71,20 +71,20 @@ None currently
 - ❌ Season/Episode sorting
 
 #### Search & Filter
-- ❌ Search input (title, group)
-- ❌ Live search with highlighting
-- ❌ Sort by (Name, Date, Recent)
-- ❌ Sort order toggle (A-Z / Z-A)
-- ❌ Keyboard shortcut (Ctrl+F)
+- ✅ Search input (title, group)
+- ✅ Live search with real-time filtering
+- ✅ Sort by (Name, Date, Recently Watched)
+- ✅ Sort order toggle (Ascending/Descending)
+- ✅ Keyboard shortcut (Ctrl+F)
 
 #### Player Enhancements
-- ❌ Auto-resume from last position
+- ✅ Auto-resume from last position
 - ❌ Next/Previous episode
 - ❌ Auto-play next episode
 - ❌ Remember volume level
 - ❌ Remember subtitle/audio tracks
 - ❌ Retry failed streams
-- ❌ Detailed error messages
+- ✅ Detailed error messages
 
 #### P2P Remote Control
 - ❌ WebSocket server
@@ -108,10 +108,10 @@ None currently
 - ❌ Network settings (port, device name)
 
 #### UI/UX Polish
-- ❌ Toast notifications
+- ✅ Toast notifications (success, error, info, warning)
 - ❌ Skeleton loaders
-- ❌ Progress bar for M3U download
-- ❌ Loading states for DB operations
+- ✅ Progress bar for M3U download
+- ✅ Loading states for DB operations
 - ❌ Keyboard navigation (Tab, Arrow keys)
 - ❌ ARIA labels
 - ❌ High contrast mode
@@ -222,11 +222,12 @@ None currently
 6. ✅ ~~Recent tracking~~
 7. ✅ ~~Watch history + resume~~
 
-### Next Up (Phase 2)
-- Search & filter
-- Settings panel
-- Toast notifications
-- Loading states
+### Phase 2 Goals (Mostly Complete)
+- ✅ ~~Search & filter~~
+- ❌ Settings panel (pending)
+- ✅ ~~Toast notifications~~
+- ✅ ~~Loading states~~
+- ✅ ~~Sort functionality~~
 
 ### Future (Phase 3)
 - P2P Remote Control
@@ -244,6 +245,10 @@ None currently
 - DB-backed content store with favorites and watch history
 - Auto-resume playback from last position
 - Auto-save watch progress every 10 seconds
+- Real-time search with Ctrl+F keyboard shortcut
+- Multi-criteria sort (Name, Date, Recently Watched)
+- Toast notification system for all operations
+- Comprehensive error handling with user-friendly messages
 
 ### Tizen
 - Not started
