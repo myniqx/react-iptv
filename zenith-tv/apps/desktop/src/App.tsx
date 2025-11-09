@@ -3,6 +3,7 @@ import { VideoPlayer } from './components/VideoPlayer';
 import { ProfileManager } from './components/ProfileManager';
 import { CategoryBrowser } from './components/CategoryBrowser';
 import { ContentGrid } from './components/ContentGrid';
+import { ToastContainer } from './components/ToastContainer';
 import { useProfilesStore } from './stores/profiles';
 import { useContentStore } from './stores/content';
 import { usePlayerStore } from '@zenith-tv/ui/src/stores/player';
@@ -228,6 +229,9 @@ function App() {
           isSyncing={isSyncing}
         />
       )}
+
+      {/* Toast Notifications */}
+      <ToastContainer />
     </div>
   );
 }

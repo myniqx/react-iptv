@@ -3,6 +3,7 @@ import type { Profile } from '@zenith-tv/types';
 import { db } from '../services/database';
 import { fetchAndParseM3U } from '../services/m3u-parser';
 import { useContentStore } from './content';
+import { useToastStore } from './toast';
 
 interface ProfilesState {
   profiles: Profile[];
@@ -44,8 +45,10 @@ export const useProfilesStore = create<ProfilesState>((set, get) => ({
     try {
       await db.addProfile(name, url);
       await get().loadProfiles();
+      useToastStore.getState().success(`Profile "${name}" added successfully`);
     } catch (error) {
       console.error('Failed to add profile:', error);
+      useToastStore.getState().error('Failed to add profile');
       throw error;
     } finally {
       set({ isLoading: false });
@@ -62,6 +65,7 @@ export const useProfilesStore = create<ProfilesState>((set, get) => ({
   deleteProfile: async (id) => {
     set({ isLoading: true });
     try {
+      const profile = get().profiles.find(p => p.id === id);
       await db.deleteProfile(id);
 
       const { currentProfile } = get();
@@ -71,8 +75,10 @@ export const useProfilesStore = create<ProfilesState>((set, get) => ({
       }
 
       await get().loadProfiles();
+      useToastStore.getState().success(`Profile "${profile?.name}" deleted`);
     } catch (error) {
       console.error('Failed to delete profile:', error);
+      useToastStore.getState().error('Failed to delete profile');
       throw error;
     } finally {
       set({ isLoading: false });
@@ -114,6 +120,14 @@ export const useProfilesStore = create<ProfilesState>((set, get) => ({
 
       set({ syncProgress: { stage: 'Complete!', percent: 100 } });
 
+      // Show success toast
+      const newCount = newItemUrls.length;
+      if (newCount > 0) {
+        useToastStore.getState().success(`Sync complete! Added ${newCount} new items`);
+      } else {
+        useToastStore.getState().info('Sync complete! No new items found');
+      }
+
       // Clear progress after 2 seconds
       setTimeout(() => {
         set({ syncProgress: null });
@@ -122,6 +136,7 @@ export const useProfilesStore = create<ProfilesState>((set, get) => ({
     } catch (error) {
       console.error('Failed to sync profile:', error);
       set({ syncProgress: null });
+      useToastStore.getState().error('Failed to sync profile. Please check the M3U URL');
       throw error;
     } finally {
       set({ isLoading: false });

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { WatchableItem } from '@zenith-tv/types';
 import { db } from '../services/database';
+import { useToastStore } from './toast';
 
 export type CategoryType = 'all' | 'movies' | 'series' | 'live' | 'favorites' | 'recent';
 export type SortBy = 'name' | 'date' | 'recent';
@@ -164,8 +165,16 @@ export const useContentStore = create<ContentState>((set, get) => ({
 
       // Reload favorites list
       await get().loadFavorites(currentProfileId);
+
+      // Show toast notification
+      if (isFavorite) {
+        useToastStore.getState().success('Added to favorites');
+      } else {
+        useToastStore.getState().info('Removed from favorites');
+      }
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
+      useToastStore.getState().error('Failed to update favorite');
     }
   },
 
