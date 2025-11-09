@@ -3,12 +3,17 @@ import type { WatchableItem } from '@zenith-tv/types';
 import { db } from '../services/database';
 
 export type CategoryType = 'all' | 'movies' | 'series' | 'live' | 'favorites' | 'recent';
+export type SortBy = 'name' | 'date' | 'recent';
+export type SortOrder = 'asc' | 'desc';
 
 interface ContentState {
   items: WatchableItem[];
   recentItems: WatchableItem[];
   favoritesItems: WatchableItem[];
   currentCategory: CategoryType;
+  searchQuery: string;
+  sortBy: SortBy;
+  sortOrder: SortOrder;
   isLoading: boolean;
   currentProfileId: number | null;
 
@@ -17,6 +22,9 @@ interface ContentState {
   loadRecent: (profileId: number) => Promise<void>;
   loadFavorites: (profileId: number) => Promise<void>;
   setCategory: (category: CategoryType) => void;
+  setSearchQuery: (query: string) => void;
+  setSortBy: (sortBy: SortBy) => void;
+  setSortOrder: (order: SortOrder) => void;
   getFilteredItems: () => WatchableItem[];
   toggleFavorite: (url: string) => Promise<void>;
   clearItems: () => void;
@@ -27,6 +35,9 @@ export const useContentStore = create<ContentState>((set, get) => ({
   recentItems: [],
   favoritesItems: [],
   currentCategory: 'all',
+  searchQuery: '',
+  sortBy: 'name',
+  sortOrder: 'asc',
   isLoading: false,
   currentProfileId: null,
 
@@ -66,25 +77,75 @@ export const useContentStore = create<ContentState>((set, get) => ({
 
   setCategory: (category) => set({ currentCategory: category }),
 
-  getFilteredItems: () => {
-    const { items, recentItems, favoritesItems, currentCategory } = get();
+  setSearchQuery: (query) => set({ searchQuery: query }),
 
+  setSortBy: (sortBy) => set({ sortBy }),
+
+  setSortOrder: (order) => set({ sortOrder: order }),
+
+  getFilteredItems: () => {
+    const { items, recentItems, favoritesItems, currentCategory, searchQuery, sortBy, sortOrder } = get();
+
+    // Step 1: Filter by category
+    let filtered: WatchableItem[] = [];
     switch (currentCategory) {
       case 'all':
-        return items;
+        filtered = items;
+        break;
       case 'movies':
-        return items.filter((item) => item.category.type === 'movie');
+        filtered = items.filter((item) => item.category.type === 'movie');
+        break;
       case 'series':
-        return items.filter((item) => item.category.type === 'series');
+        filtered = items.filter((item) => item.category.type === 'series');
+        break;
       case 'live':
-        return items.filter((item) => item.category.type === 'live_stream');
+        filtered = items.filter((item) => item.category.type === 'live_stream');
+        break;
       case 'favorites':
-        return favoritesItems;
+        filtered = favoritesItems;
+        break;
       case 'recent':
-        return recentItems;
+        filtered = recentItems;
+        break;
       default:
-        return items;
+        filtered = items;
     }
+
+    // Step 2: Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((item) =>
+        item.title.toLowerCase().includes(query) ||
+        item.group?.toLowerCase().includes(query)
+      );
+    }
+
+    // Step 3: Sort items
+    const sorted = [...filtered].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortBy) {
+        case 'name':
+          comparison = a.title.localeCompare(b.title);
+          break;
+        case 'date':
+          comparison = new Date(a.addedDate).getTime() - new Date(b.addedDate).getTime();
+          break;
+        case 'recent':
+          if (a.watchHistory && b.watchHistory) {
+            comparison = new Date(b.watchHistory.lastWatched).getTime() - new Date(a.watchHistory.lastWatched).getTime();
+          } else if (a.watchHistory) {
+            comparison = -1;
+          } else if (b.watchHistory) {
+            comparison = 1;
+          }
+          break;
+      }
+
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return sorted;
   },
 
   toggleFavorite: async (url) => {
@@ -114,6 +175,9 @@ export const useContentStore = create<ContentState>((set, get) => ({
       recentItems: [],
       favoritesItems: [],
       currentProfileId: null,
+      searchQuery: '',
+      sortBy: 'name',
+      sortOrder: 'asc',
     });
   },
 }));
