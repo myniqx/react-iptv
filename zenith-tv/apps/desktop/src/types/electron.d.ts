@@ -24,6 +24,26 @@ export interface ElectronAPI {
     saveWatchProgress: (itemUrl: string, position: number, duration: number) => Promise<void>;
     getWatchHistory: (itemUrl: string) => Promise<DBWatchHistory | undefined>;
   };
+  p2p: {
+    // Server control
+    start: (port: number) => Promise<P2PDeviceInfo>;
+    stop: () => Promise<void>;
+    getDeviceInfo: () => Promise<P2PDeviceInfo>;
+
+    // Pairing
+    acceptPairing: (deviceId: string, pin: string) => Promise<boolean>;
+    rejectPairing: (deviceId: string) => Promise<void>;
+
+    // State broadcast
+    broadcastState: (state: P2PPlayerState) => Promise<void>;
+
+    // Event listeners
+    onPairingRequest: (callback: (request: P2PPairingRequest) => void) => void;
+    onPlay: (callback: (data: { item: any; position?: number }) => void) => void;
+    onPause: (callback: () => void) => void;
+    onSeek: (callback: (position: number) => void) => void;
+    onSetVolume: (callback: (volume: number) => void) => void;
+  };
 }
 
 export interface DBProfile {
@@ -65,6 +85,25 @@ export interface DBWatchHistory {
   duration: number;
   last_watched: string;
   completed: number;
+}
+
+export interface P2PDeviceInfo {
+  deviceId: string;
+  deviceName: string;
+  port: number;
+}
+
+export interface P2PPairingRequest {
+  deviceId: string;
+  deviceName: string;
+  pin: string;
+}
+
+export interface P2PPlayerState {
+  currentItem: any;
+  state: 'playing' | 'paused' | 'idle';
+  position: number;
+  volume: number;
 }
 
 declare global {
