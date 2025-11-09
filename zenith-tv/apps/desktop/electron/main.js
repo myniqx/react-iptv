@@ -1,9 +1,11 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { getDatabase } = require('./database');
+const { P2PServer } = require('./p2p-server');
 
 let mainWindow;
 let db;
+let p2pServer;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -38,6 +40,40 @@ app.whenReady().then(() => {
   db = getDatabase();
   db.init();
 
+  // Initialize P2P server
+  p2pServer = new P2PServer(db);
+
+  // Setup event handlers for P2P
+  p2pServer.onPairingRequest = (pairing) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('p2p:pairing-request', pairing);
+    }
+  };
+
+  p2pServer.onPlayCommand = (item, position) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('p2p:play', { item, position });
+    }
+  };
+
+  p2pServer.onPauseCommand = () => {
+    if (mainWindow) {
+      mainWindow.webContents.send('p2p:pause');
+    }
+  };
+
+  p2pServer.onSeekCommand = (position) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('p2p:seek', position);
+    }
+  };
+
+  p2pServer.onSetVolumeCommand = (volume) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('p2p:set-volume', volume);
+    }
+  };
+
   // Setup IPC handlers
   setupIPCHandlers();
 
@@ -46,6 +82,7 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
+    p2pServer?.stop();
     db?.close();
     app.quit();
   }
@@ -58,6 +95,7 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
+  p2pServer?.stop();
   db?.close();
 });
 
@@ -94,4 +132,34 @@ function setupIPCHandlers() {
   );
   ipcMain.handle('db:invalidateM3UCache', (_, url) => db.invalidateM3UCache(url));
   ipcMain.handle('db:cleanExpiredCache', () => db.cleanExpiredCache());
+
+  // P2P Remote Control
+  ipcMain.handle('p2p:start', (_, port) => {
+    p2pServer.start(port);
+    return { deviceId: p2pServer.deviceId, port: p2pServer.port };
+  });
+
+  ipcMain.handle('p2p:stop', () => {
+    p2pServer.stop();
+  });
+
+  ipcMain.handle('p2p:acceptPairing', (_, deviceId, pin) => {
+    return p2pServer.acceptPairing(deviceId, pin);
+  });
+
+  ipcMain.handle('p2p:rejectPairing', (_, deviceId) => {
+    p2pServer.rejectPairing(deviceId);
+  });
+
+  ipcMain.handle('p2p:broadcastState', (_, state) => {
+    p2pServer.broadcastState(state);
+  });
+
+  ipcMain.handle('p2p:getDeviceInfo', () => {
+    return {
+      id: p2pServer.deviceId,
+      name: p2pServer.deviceName,
+      port: p2pServer.port,
+    };
+  });
 }

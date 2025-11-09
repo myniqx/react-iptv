@@ -8,6 +8,7 @@ interface SettingsProps {
 export function Settings({ onClose }: SettingsProps) {
   const {
     theme,
+    highContrastMode,
     language,
     defaultCategory,
     autoSyncInterval,
@@ -17,6 +18,7 @@ export function Settings({ onClose }: SettingsProps) {
     deviceName,
     serverPort,
     setTheme,
+    setHighContrastMode,
     setLanguage,
     setDefaultCategory,
     setAutoSyncInterval,
@@ -93,6 +95,28 @@ export function Settings({ onClose }: SettingsProps) {
                     <option value="en">English</option>
                     <option value="tr" disabled>Türkçe (Coming Soon)</option>
                   </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-300">
+                      High Contrast Mode
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Increase contrast for better visibility
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setHighContrastMode(!highContrastMode)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors
+                              ${highContrastMode ? 'bg-blue-600' : 'bg-gray-700'}`}
+                    aria-label={`High contrast mode ${highContrastMode ? 'enabled' : 'disabled'}`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                                ${highContrastMode ? 'translate-x-6' : 'translate-x-1'}`}
+                    />
+                  </button>
                 </div>
               </div>
             </section>

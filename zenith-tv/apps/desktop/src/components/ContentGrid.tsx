@@ -10,6 +10,9 @@ interface ContentGridProps {
   isLoading?: boolean;
 }
 
+// Global selected index for keyboard navigation
+let globalSelectedIndex = -1;
+
 // Card dimensions
 const CARD_HEIGHT = 320; // aspect-[2/3] (200px) + title space (120px)
 const CARD_GAP = 16; // gap-4 in pixels
@@ -17,7 +20,14 @@ const GRID_PADDING = 24; // p-6 in pixels
 
 export function ContentGrid({ items, onItemClick, onToggleFavorite, isLoading }: ContentGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<any>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0, columnCount: 4 });
+  const [selectedIndex, setSelectedIndex] = useState(globalSelectedIndex);
+
+  // Update global selected index when local changes
+  useEffect(() => {
+    globalSelectedIndex = selectedIndex;
+  }, [selectedIndex]);
 
   // Calculate responsive column count based on width
   const getColumnCount = (width: number): number => {
@@ -54,6 +64,109 @@ export function ContentGrid({ items, onItemClick, onToggleFavorite, isLoading }:
     };
   }, []);
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if focus is on input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      const { columnCount } = dimensions;
+      const totalItems = items.length;
+
+      if (totalItems === 0) return;
+
+      let newIndex = selectedIndex;
+
+      switch (e.key) {
+        case 'ArrowRight':
+          e.preventDefault();
+          if (selectedIndex === -1) {
+            newIndex = 0;
+          } else {
+            newIndex = Math.min(selectedIndex + 1, totalItems - 1);
+          }
+          break;
+
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (selectedIndex === -1) {
+            newIndex = 0;
+          } else {
+            newIndex = Math.max(selectedIndex - 1, 0);
+          }
+          break;
+
+        case 'ArrowDown':
+          e.preventDefault();
+          if (selectedIndex === -1) {
+            newIndex = 0;
+          } else {
+            newIndex = Math.min(selectedIndex + columnCount, totalItems - 1);
+          }
+          break;
+
+        case 'ArrowUp':
+          e.preventDefault();
+          if (selectedIndex === -1) {
+            newIndex = 0;
+          } else {
+            newIndex = Math.max(selectedIndex - columnCount, 0);
+          }
+          break;
+
+        case 'Enter':
+          e.preventDefault();
+          if (selectedIndex >= 0 && selectedIndex < totalItems) {
+            onItemClick(items[selectedIndex]);
+          }
+          break;
+
+        case 'Tab':
+          e.preventDefault();
+          if (selectedIndex === -1) {
+            newIndex = 0;
+          } else {
+            newIndex = e.shiftKey
+              ? Math.max(selectedIndex - 1, 0)
+              : Math.min(selectedIndex + 1, totalItems - 1);
+          }
+          break;
+
+        case 'Home':
+          e.preventDefault();
+          newIndex = 0;
+          break;
+
+        case 'End':
+          e.preventDefault();
+          newIndex = totalItems - 1;
+          break;
+
+        default:
+          return;
+      }
+
+      if (newIndex !== selectedIndex) {
+        setSelectedIndex(newIndex);
+
+        // Scroll to selected item
+        if (gridRef.current && newIndex >= 0) {
+          const rowIndex = Math.floor(newIndex / columnCount);
+          gridRef.current.scrollToItem({
+            align: 'auto',
+            rowIndex,
+            columnIndex: newIndex % columnCount,
+          });
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [items, selectedIndex, dimensions, onItemClick]);
+
   if (isLoading) {
     return <SkeletonGrid count={24} />;
   }
@@ -82,6 +195,7 @@ export function ContentGrid({ items, onItemClick, onToggleFavorite, isLoading }:
     <div ref={containerRef} className="h-full w-full">
       {width > 0 && height > 0 && (
         <Grid
+          ref={gridRef}
           columnCount={columnCount}
           columnWidth={columnWidth}
           height={height}
@@ -96,6 +210,8 @@ export function ContentGrid({ items, onItemClick, onToggleFavorite, isLoading }:
             if (index >= items.length) return null;
 
             const item = items[index];
+            const isSelected = index === selectedIndex;
+
             return (
               <div
                 style={{
@@ -110,6 +226,7 @@ export function ContentGrid({ items, onItemClick, onToggleFavorite, isLoading }:
                   item={item}
                   onClick={onItemClick}
                   onToggleFavorite={onToggleFavorite}
+                  isSelected={isSelected}
                 />
               </div>
             );
@@ -124,9 +241,10 @@ interface ContentCardProps {
   item: WatchableItem;
   onClick: (item: WatchableItem) => void;
   onToggleFavorite?: (url: string) => void;
+  isSelected?: boolean;
 }
 
-const ContentCard = memo(function ContentCard({ item, onClick, onToggleFavorite }: ContentCardProps) {
+const ContentCard = memo(function ContentCard({ item, onClick, onToggleFavorite, isSelected }: ContentCardProps) {
   const getCategoryBadge = () => {
     if (item.category.type === 'live_stream') {
       return { text: 'LIVE', color: 'bg-red-500' };
@@ -147,9 +265,13 @@ const ContentCard = memo(function ContentCard({ item, onClick, onToggleFavorite 
     <div
       onClick={() => onClick(item)}
       className="group cursor-pointer h-full flex flex-col"
+      role="button"
+      tabIndex={isSelected ? 0 : -1}
+      aria-label={`${item.title}. ${badge.text}. ${item.group || 'No group'}`}
     >
-      <div className="relative aspect-[2/3] bg-gray-800 rounded-lg overflow-hidden
-                    hover:ring-2 hover:ring-blue-500 transition-all">
+      <div className={`relative aspect-[2/3] bg-gray-800 rounded-lg overflow-hidden
+                    hover:ring-2 hover:ring-blue-500 transition-all
+                    ${isSelected ? 'ring-4 ring-blue-400 ring-offset-2 ring-offset-gray-900' : ''}`}>
         {/* Thumbnail placeholder */}
         {item.logo ? (
           <img
@@ -195,6 +317,7 @@ const ContentCard = memo(function ContentCard({ item, onClick, onToggleFavorite 
             className="absolute top-2 left-2 p-1 rounded-full bg-black/50 hover:bg-black/70
                      transition-colors z-10"
             title={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
             <svg
               className={`w-5 h-5 ${item.isFavorite ? 'text-yellow-400' : 'text-gray-400'}`}
@@ -202,6 +325,7 @@ const ContentCard = memo(function ContentCard({ item, onClick, onToggleFavorite 
               stroke={item.isFavorite ? 'none' : 'currentColor'}
               strokeWidth={item.isFavorite ? 0 : 2}
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
             </svg>
