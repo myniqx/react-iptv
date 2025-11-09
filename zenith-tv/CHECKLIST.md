@@ -10,7 +10,7 @@ Cross-platform IPTV player development progress tracker.
 
 | Platform | Core | UI/UX | P2P Remote | Total |
 |----------|------|-------|------------|-------|
-| **Desktop** | 100% | 95% | 0% | **85%** |
+| **Desktop** | 100% | 100% | 100% | **100%** |
 | **Tizen TV** | 0% | 0% | 0% | **0%** |
 | **Android** | 0% | 0% | 0% | **0%** |
 
@@ -82,20 +82,20 @@ None currently
 - ✅ Next/Previous episode
 - ✅ Auto-play next episode
 - ✅ Remember volume level
-- ❌ Remember subtitle/audio tracks
+- ✅ Remember subtitle/audio tracks
 - ✅ Retry failed streams
 - ✅ Detailed error messages
 
 #### P2P Remote Control
-- ❌ WebSocket server
-- ❌ mDNS service announcement
-- ❌ Device discovery UI
-- ❌ Device pairing (PIN/QR)
-- ❌ Remote control interface
-- ❌ Send commands (play, seek, volume, select)
-- ❌ Receive commands
-- ❌ State synchronization
-- ❌ "Controlled by [Device]" notification
+- ✅ WebSocket server
+- ✅ Device discovery (via WebSocket connection)
+- ✅ Device pairing (PIN-based)
+- ✅ Pairing dialog UI
+- ✅ Remote control interface
+- ✅ Send commands (play, seek, volume, pause)
+- ✅ Receive commands
+- ✅ State synchronization (broadcast player state)
+- ✅ "Controlled by [Device]" notification indicator
 
 #### Settings & Preferences
 - ✅ Settings panel
@@ -112,9 +112,9 @@ None currently
 - ✅ Skeleton loaders
 - ✅ Progress bar for M3U download
 - ✅ Loading states for DB operations
-- ❌ Keyboard navigation (Tab, Arrow keys)
-- ❌ ARIA labels
-- ❌ High contrast mode
+- ✅ Keyboard navigation (Tab, Arrow keys, Enter, Home, End)
+- ✅ ARIA labels (comprehensive accessibility)
+- ✅ High contrast mode
 
 #### Performance
 - ✅ Virtual scrolling (1000+ items)
@@ -231,8 +231,13 @@ None currently
 - ✅ ~~Sort functionality~~
 - ✅ ~~Performance optimizations~~
 
-### Future (Phase 3)
-- P2P Remote Control
+### Phase 3 Goals ✅ COMPLETE
+- ✅ ~~P2P Remote Control~~
+- ✅ ~~Keyboard navigation~~
+- ✅ ~~ARIA labels~~
+- ✅ ~~High contrast mode~~
+
+### Future (Phase 4)
 - Tizen app
 - Android app
 
@@ -270,6 +275,22 @@ None currently
 - Force sync option to bypass cache
 - Automatic expired cache cleanup on startup
 - Database indexes for optimal query performance
+- Track preferences (audio/subtitle) saved to localStorage
+- PIN-based P2P device pairing (4-digit)
+- WebSocket server for remote control (port 8080)
+- Pairing dialog UI for accepting/rejecting connections
+- Remote control indicator showing connection status
+- P2P commands: play, pause, seek, set volume
+- State broadcast to connected devices (every 2 seconds)
+- Full keyboard navigation (arrow keys, Tab, Enter, Home, End)
+- Visual indicator for keyboard-selected items (blue ring)
+- Auto-scroll to keep selected item in view
+- Comprehensive ARIA labels for screen readers
+- role attributes (banner, main, toolbar, search, button)
+- aria-pressed, aria-label, aria-live attributes throughout
+- High contrast mode with black/white/yellow theme
+- High contrast toggle in Settings (Appearance section)
+- Strong borders and focus indicators in high contrast mode
 
 ### Tizen
 - Not started
