@@ -18,6 +18,7 @@ interface SettingsState {
   // Player
   defaultVolume: number; // 0-1
   autoResume: boolean;
+  autoPlayNext: boolean;
 
   // Network (for future P2P)
   deviceName: string;
@@ -30,6 +31,7 @@ interface SettingsState {
   setAutoSyncInterval: (minutes: number) => void;
   setDefaultVolume: (volume: number) => void;
   setAutoResume: (enabled: boolean) => void;
+  setAutoPlayNext: (enabled: boolean) => void;
   setDeviceName: (name: string) => void;
   setServerPort: (port: number) => void;
   resetSettings: () => void;
@@ -42,6 +44,7 @@ const defaultSettings = {
   autoSyncInterval: 0,
   defaultVolume: 0.7,
   autoResume: true,
+  autoPlayNext: true,
   deviceName: 'Zenith TV',
   serverPort: 8080,
 };
@@ -65,6 +68,8 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       setAutoResume: (enabled) => set({ autoResume: enabled }),
+
+      setAutoPlayNext: (enabled) => set({ autoPlayNext: enabled }),
 
       setDeviceName: (name) => set({ deviceName: name }),
 

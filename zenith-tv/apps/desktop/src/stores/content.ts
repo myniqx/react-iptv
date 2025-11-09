@@ -7,6 +7,12 @@ export type CategoryType = 'all' | 'movies' | 'series' | 'live' | 'favorites' | 
 export type SortBy = 'name' | 'date' | 'recent';
 export type SortOrder = 'asc' | 'desc';
 
+export interface SeriesGroup {
+  seriesName: string;
+  episodes: WatchableItem[];
+  totalEpisodes: number;
+}
+
 interface ContentState {
   items: WatchableItem[];
   recentItems: WatchableItem[];
@@ -29,6 +35,12 @@ interface ContentState {
   getFilteredItems: () => WatchableItem[];
   toggleFavorite: (url: string) => Promise<void>;
   clearItems: () => void;
+
+  // Series helpers
+  getSeriesGroups: () => SeriesGroup[];
+  getEpisodesForSeries: (seriesName: string) => WatchableItem[];
+  getNextEpisode: (currentItem: WatchableItem) => WatchableItem | null;
+  getPreviousEpisode: (currentItem: WatchableItem) => WatchableItem | null;
 }
 
 export const useContentStore = create<ContentState>((set, get) => ({
@@ -188,5 +200,85 @@ export const useContentStore = create<ContentState>((set, get) => ({
       sortBy: 'name',
       sortOrder: 'asc',
     });
+  },
+
+  getSeriesGroups: () => {
+    const { items } = get();
+    const seriesItems = items.filter((item) => item.category.type === 'series');
+
+    // Group by series name
+    const groups = new Map<string, WatchableItem[]>();
+    seriesItems.forEach((item) => {
+      if (item.category.type === 'series') {
+        const seriesName = item.category.episode.seriesName;
+        if (!groups.has(seriesName)) {
+          groups.set(seriesName, []);
+        }
+        groups.get(seriesName)!.push(item);
+      }
+    });
+
+    // Convert to SeriesGroup array and sort episodes
+    return Array.from(groups.entries()).map(([seriesName, episodes]) => {
+      const sortedEpisodes = [...episodes].sort((a, b) => {
+        if (a.category.type === 'series' && b.category.type === 'series') {
+          const seasonDiff = a.category.episode.season - b.category.episode.season;
+          if (seasonDiff !== 0) return seasonDiff;
+          return a.category.episode.episode - b.category.episode.episode;
+        }
+        return 0;
+      });
+
+      return {
+        seriesName,
+        episodes: sortedEpisodes,
+        totalEpisodes: sortedEpisodes.length,
+      };
+    }).sort((a, b) => a.seriesName.localeCompare(b.seriesName));
+  },
+
+  getEpisodesForSeries: (seriesName) => {
+    const { items } = get();
+    const episodes = items.filter(
+      (item) =>
+        item.category.type === 'series' &&
+        item.category.episode.seriesName === seriesName
+    );
+
+    // Sort by season and episode
+    return episodes.sort((a, b) => {
+      if (a.category.type === 'series' && b.category.type === 'series') {
+        const seasonDiff = a.category.episode.season - b.category.episode.season;
+        if (seasonDiff !== 0) return seasonDiff;
+        return a.category.episode.episode - b.category.episode.episode;
+      }
+      return 0;
+    });
+  },
+
+  getNextEpisode: (currentItem) => {
+    if (currentItem.category.type !== 'series') return null;
+
+    const episodes = get().getEpisodesForSeries(currentItem.category.episode.seriesName);
+    const currentIndex = episodes.findIndex((ep) => ep.url === currentItem.url);
+
+    if (currentIndex === -1 || currentIndex === episodes.length - 1) {
+      return null;
+    }
+
+    return episodes[currentIndex + 1];
+  },
+
+  getPreviousEpisode: (currentItem) => {
+    if (currentItem.category.type !== 'series') return null;
+
+    const episodes = get().getEpisodesForSeries(currentItem.category.episode.seriesName);
+    const currentIndex = episodes.findIndex((ep) => ep.url === currentItem.url);
+
+    if (currentIndex <= 0) {
+      return null;
+    }
+
+    return episodes[currentIndex - 1];
   },
 }));

@@ -1,4 +1,5 @@
 import { usePlayerStore } from '@zenith-tv/ui/src/stores/player';
+import { useContentStore } from '../stores/content';
 
 interface PlayerControlsProps {
   isFullscreen: boolean;
@@ -19,7 +20,10 @@ export function PlayerControls({
     seek,
     setVolume,
     toggleMute,
+    play,
   } = usePlayerStore();
+
+  const { getNextEpisode, getPreviousEpisode } = useContentStore();
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     seek(parseFloat(e.target.value));
@@ -45,6 +49,22 @@ export function PlayerControls({
     }
   };
 
+  const handlePreviousEpisode = () => {
+    if (!currentItem) return;
+    const prevEpisode = getPreviousEpisode(currentItem);
+    if (prevEpisode) {
+      play(prevEpisode);
+    }
+  };
+
+  const handleNextEpisode = () => {
+    if (!currentItem) return;
+    const nextEpisode = getNextEpisode(currentItem);
+    if (nextEpisode) {
+      play(nextEpisode);
+    }
+  };
+
   const formatTime = (time: number) => {
     if (!isFinite(time)) return '0:00';
     const hours = Math.floor(time / 3600);
@@ -61,11 +81,27 @@ export function PlayerControls({
     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6">
       {/* Title */}
       <div className="mb-4">
-        <h3 className="text-xl font-semibold text-white truncate">
-          {currentItem?.title}
-        </h3>
-        {currentItem?.group && (
-          <p className="text-sm text-gray-400">{currentItem.group}</p>
+        {currentItem?.category.type === 'series' ? (
+          <>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2 py-0.5 bg-purple-600 rounded text-xs font-bold">
+                S{currentItem.category.episode.season.toString().padStart(2, '0')}E{currentItem.category.episode.episode.toString().padStart(2, '0')}
+              </span>
+              <h3 className="text-xl font-semibold text-white truncate">
+                {currentItem.category.episode.seriesName}
+              </h3>
+            </div>
+            <p className="text-sm text-gray-400">{currentItem.title}</p>
+          </>
+        ) : (
+          <>
+            <h3 className="text-xl font-semibold text-white truncate">
+              {currentItem?.title}
+            </h3>
+            {currentItem?.group && (
+              <p className="text-sm text-gray-400">{currentItem.group}</p>
+            )}
+          </>
         )}
       </div>
 
@@ -133,6 +169,38 @@ export function PlayerControls({
               <path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z" />
             </svg>
           </button>
+
+          {/* Episode Navigation - Only show for series */}
+          {currentItem?.category.type === 'series' && (
+            <>
+              {/* Divider */}
+              <div className="w-px h-8 bg-gray-600" />
+
+              {/* Previous Episode */}
+              <button
+                onClick={handlePreviousEpisode}
+                disabled={!getPreviousEpisode(currentItem)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Previous Episode"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+                </svg>
+              </button>
+
+              {/* Next Episode */}
+              <button
+                onClick={handleNextEpisode}
+                disabled={!getNextEpisode(currentItem)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Next Episode"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+                </svg>
+              </button>
+            </>
+          )}
 
           {/* Volume */}
           <div className="flex items-center gap-2">

@@ -13,6 +13,7 @@ export function Settings({ onClose }: SettingsProps) {
     autoSyncInterval,
     defaultVolume,
     autoResume,
+    autoPlayNext,
     deviceName,
     serverPort,
     setTheme,
@@ -21,6 +22,7 @@ export function Settings({ onClose }: SettingsProps) {
     setAutoSyncInterval,
     setDefaultVolume,
     setAutoResume,
+    setAutoPlayNext,
     setDeviceName,
     setServerPort,
     resetSettings,
@@ -187,6 +189,27 @@ export function Settings({ onClose }: SettingsProps) {
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform
                                 ${autoResume ? 'translate-x-6' : 'translate-x-1'}`}
+                    />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-300">
+                      Auto-Play Next Episode
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Automatically play next episode when current ends
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setAutoPlayNext(!autoPlayNext)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors
+                              ${autoPlayNext ? 'bg-blue-600' : 'bg-gray-700'}`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                                ${autoPlayNext ? 'translate-x-6' : 'translate-x-1'}`}
                     />
                   </button>
                 </div>

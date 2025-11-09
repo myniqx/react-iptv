@@ -2,13 +2,18 @@ import { useRef, useState, useEffect } from 'react';
 import { usePlayerStore } from '@zenith-tv/ui/src/stores/player';
 import { PlayerControls } from './PlayerControls';
 import { db } from '../services/database';
+import { useContentStore } from '../stores/content';
+import { useSettingsStore } from '../stores/settings';
 
 export function VideoPlayer() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const hideControlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const retryTimeoutRef = useRef<NodeJS.Timeout>();
 
   const {
     currentItem,
@@ -19,7 +24,59 @@ export function VideoPlayer() {
     setState,
     updatePosition,
     updateDuration,
+    play,
   } = usePlayerStore();
+
+  const { getNextEpisode } = useContentStore();
+  const { autoPlayNext, defaultVolume, setDefaultVolume } = useSettingsStore();
+
+  // Initialize volume from settings on mount
+  useEffect(() => {
+    const { setVolume } = usePlayerStore.getState();
+    setVolume(defaultVolume);
+  }, []); // Empty deps - only run on mount
+
+  // Save volume changes to settings
+  useEffect(() => {
+    if (volume !== defaultVolume) {
+      setDefaultVolume(volume);
+    }
+  }, [volume, defaultVolume, setDefaultVolume]);
+
+  // Retry stream function
+  const retryStream = () => {
+    const video = videoRef.current;
+    if (!video || !currentItem) return;
+
+    setRetryCount((prev) => prev + 1);
+    setErrorMessage('');
+    setState('loading');
+
+    // Reload the video
+    video.load();
+    video.play().catch((err) => {
+      console.error('Retry failed:', err);
+    });
+  };
+
+  // Manual retry (reset count)
+  const handleManualRetry = () => {
+    setRetryCount(0);
+    retryStream();
+  };
+
+  // Reset retry count when item changes
+  useEffect(() => {
+    setRetryCount(0);
+    setErrorMessage('');
+
+    // Clear any pending retry timeouts
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, [currentItem]);
 
   // Video event handlers
   useEffect(() => {
@@ -42,8 +99,49 @@ export function VideoPlayer() {
     const handleCanPlay = () => {
       if (state === 'buffering') setState('playing');
     };
-    const handleEnded = () => setState('idle');
-    const handleError = () => setState('error');
+    const handleEnded = () => {
+      setState('idle');
+
+      // Auto-play next episode if enabled and available
+      if (autoPlayNext && currentItem) {
+        const nextEpisode = getNextEpisode(currentItem);
+        if (nextEpisode) {
+          setTimeout(() => play(nextEpisode), 500); // Small delay for better UX
+        }
+      }
+    };
+    const handleError = (e: Event) => {
+      const mediaError = video.error;
+      let message = 'Failed to load stream';
+
+      if (mediaError) {
+        switch (mediaError.code) {
+          case mediaError.MEDIA_ERR_ABORTED:
+            message = 'Stream loading aborted';
+            break;
+          case mediaError.MEDIA_ERR_NETWORK:
+            message = 'Network error - check your connection';
+            break;
+          case mediaError.MEDIA_ERR_DECODE:
+            message = 'Stream format not supported';
+            break;
+          case mediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            message = 'Stream source not available';
+            break;
+        }
+      }
+
+      setErrorMessage(message);
+      setState('error');
+
+      // Auto-retry with exponential backoff (max 3 attempts)
+      if (retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        retryTimeoutRef.current = setTimeout(() => {
+          retryStream();
+        }, delay);
+      }
+    };
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('timeupdate', handleTimeUpdate);
@@ -64,7 +162,7 @@ export function VideoPlayer() {
       video.removeEventListener('ended', handleEnded);
       video.removeEventListener('error', handleError);
     };
-  }, [state, setState, updatePosition, updateDuration]);
+  }, [state, setState, updatePosition, updateDuration, autoPlayNext, currentItem, getNextEpisode, play, retryCount]);
 
   // Update video source when currentItem changes
   useEffect(() => {
@@ -264,15 +362,36 @@ export function VideoPlayer() {
       {/* Error message */}
       {state === 'error' && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/90">
-          <div className="text-center">
+          <div className="text-center max-w-lg px-6">
             <div className="text-6xl mb-4">⚠️</div>
             <h3 className="text-2xl font-semibold text-red-500 mb-2">
               Playback Error
             </h3>
-            <p className="text-gray-400 mb-4">
-              Failed to load video stream
+            <p className="text-gray-400 mb-2">
+              {errorMessage || 'Failed to load video stream'}
             </p>
-            <p className="text-sm text-gray-500 font-mono">
+
+            {retryCount > 0 && retryCount < 3 && (
+              <p className="text-sm text-gray-500 mb-4">
+                Auto-retrying... (Attempt {retryCount + 1}/3)
+              </p>
+            )}
+
+            {retryCount >= 3 && (
+              <p className="text-sm text-yellow-500 mb-4">
+                Maximum retry attempts reached
+              </p>
+            )}
+
+            <button
+              onClick={handleManualRetry}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg
+                       transition-colors font-medium mt-4"
+            >
+              Retry Now
+            </button>
+
+            <p className="text-xs text-gray-600 font-mono mt-4 truncate max-w-full">
               {currentItem.url}
             </p>
           </div>
