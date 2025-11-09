@@ -117,7 +117,7 @@ None currently
 - ❌ High contrast mode
 
 #### Performance
-- ❌ Virtual scrolling (1000+ items)
+- ✅ Virtual scrolling (1000+ items)
 - ✅ Lazy load thumbnails (native loading="lazy")
 - ❌ Cache parsed M3U
 - ✅ Debounce search (300ms)
@@ -262,6 +262,9 @@ None currently
 - Auto-retry failed streams (exponential backoff, 3 attempts)
 - Detailed error messages for different failure types
 - Enhanced series display in player controls
+- Virtual scrolling with react-window (handles 1000+ items)
+- Responsive grid with dynamic column calculation
+- ResizeObserver for automatic layout updates
 
 ### Tizen
 - Not started
