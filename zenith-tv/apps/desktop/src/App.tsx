@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import { VideoPlayer } from './components/VideoPlayer';
 import { ProfileManager } from './components/ProfileManager';
+import { CategoryBrowser } from './components/CategoryBrowser';
+import { ContentGrid } from './components/ContentGrid';
 import { useProfilesStore } from './stores/profiles';
+import { useContentStore } from './stores/content';
+import { usePlayerStore } from '@zenith-tv/ui/src/stores/player';
 
 function App() {
   const [showProfileManager, setShowProfileManager] = useState(false);
+  const [showBrowser, setShowBrowser] = useState(true);
 
   const {
     profiles,
@@ -14,6 +19,15 @@ function App() {
     selectProfile,
     deleteProfile,
   } = useProfilesStore();
+
+  const {
+    currentCategory,
+    setCategory,
+    getFilteredItems,
+    isLoading,
+  } = useContentStore();
+
+  const { play } = usePlayerStore();
 
   // Load profiles on mount
   useEffect(() => {
@@ -61,20 +75,55 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex">
-        {/* Sidebar - will be implemented in next step */}
-        <aside className="w-64 bg-gray-800 border-r border-gray-700 p-4">
-          <div className="text-center py-8">
-            <div className="text-4xl mb-3">📚</div>
-            <p className="text-sm text-gray-400">
-              Category browser<br />coming next
-            </p>
-          </div>
-        </aside>
+      <main className="flex-1 flex overflow-hidden">
+        {/* Category Browser */}
+        {showBrowser && (
+          <CategoryBrowser
+            currentCategory={currentCategory}
+            onCategoryChange={setCategory}
+          />
+        )}
 
-        {/* Player */}
-        <div className="flex-1">
-          <VideoPlayer />
+        {/* Content Grid or Player */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Toggle Button */}
+          <div className="flex items-center justify-between px-4 py-2 bg-gray-800/50 border-b border-gray-700">
+            <button
+              onClick={() => setShowBrowser(!showBrowser)}
+              className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm
+                       transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                {showBrowser ? (
+                  <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+                ) : (
+                  <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+                )}
+              </svg>
+              {showBrowser ? 'Hide Browser' : 'Show Browser'}
+            </button>
+
+            <div className="text-sm text-gray-400">
+              {getFilteredItems().length} items
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 grid grid-cols-2 overflow-hidden">
+            {/* Content Grid */}
+            <div className="overflow-hidden">
+              <ContentGrid
+                items={getFilteredItems()}
+                onItemClick={(item) => play(item)}
+                isLoading={isLoading}
+              />
+            </div>
+
+            {/* Video Player */}
+            <div className="border-l border-gray-700">
+              <VideoPlayer />
+            </div>
+          </div>
         </div>
       </main>
 

@@ -1,0 +1,132 @@
+import type { WatchableItem } from '@zenith-tv/types';
+
+interface ContentGridProps {
+  items: WatchableItem[];
+  onItemClick: (item: WatchableItem) => void;
+  isLoading?: boolean;
+}
+
+export function ContentGrid({ items, onItemClick, isLoading }: ContentGridProps) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Loading content...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="text-6xl mb-4">📭</div>
+          <h3 className="text-2xl font-semibold text-gray-300 mb-2">
+            No content found
+          </h3>
+          <p className="text-gray-500">
+            Try selecting a different category or add a new profile
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 p-6">
+        {items.map((item, index) => (
+          <ContentCard key={`${item.url}-${index}`} item={item} onClick={onItemClick} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface ContentCardProps {
+  item: WatchableItem;
+  onClick: (item: WatchableItem) => void;
+}
+
+function ContentCard({ item, onClick }: ContentCardProps) {
+  const getCategoryBadge = () => {
+    if (item.category.type === 'live_stream') {
+      return { text: 'LIVE', color: 'bg-red-500' };
+    }
+    if (item.category.type === 'series') {
+      const ep = item.category.episode;
+      return {
+        text: `S${ep.season.toString().padStart(2, '0')}E${ep.episode.toString().padStart(2, '0')}`,
+        color: 'bg-purple-500',
+      };
+    }
+    return { text: 'MOVIE', color: 'bg-blue-500' };
+  };
+
+  const badge = getCategoryBadge();
+
+  return (
+    <div
+      onClick={() => onClick(item)}
+      className="group cursor-pointer"
+    >
+      <div className="relative aspect-[2/3] bg-gray-800 rounded-lg overflow-hidden
+                    hover:ring-2 hover:ring-blue-500 transition-all">
+        {/* Thumbnail placeholder */}
+        {item.logo ? (
+          <img
+            src={item.logo}
+            alt={item.title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800">
+            <span className="text-6xl opacity-50">
+              {item.category.type === 'live_stream' ? '📡' :
+               item.category.type === 'series' ? '📺' : '🎬'}
+            </span>
+          </div>
+        )}
+
+        {/* Overlay on hover */}
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100
+                      transition-opacity flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center">
+            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Category badge */}
+        <div className={`absolute top-2 right-2 ${badge.color} px-2 py-1 rounded text-xs font-bold`}>
+          {badge.text}
+        </div>
+
+        {/* Favorite star */}
+        {item.isFavorite && (
+          <div className="absolute top-2 left-2 text-yellow-400">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* Title */}
+      <div className="mt-2">
+        <h3 className="text-sm font-medium text-white line-clamp-2 group-hover:text-blue-400 transition-colors">
+          {item.title}
+        </h3>
+        {item.group && (
+          <p className="text-xs text-gray-500 mt-1">{item.group}</p>
+        )}
+      </div>
+    </div>
+  );
+}
