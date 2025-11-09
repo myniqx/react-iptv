@@ -1,4 +1,5 @@
-import { memo } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
+import { FixedSizeGrid as Grid } from 'react-window';
 import type { WatchableItem } from '@zenith-tv/types';
 
 interface ContentGridProps {
@@ -8,7 +9,50 @@ interface ContentGridProps {
   isLoading?: boolean;
 }
 
+// Card dimensions
+const CARD_HEIGHT = 320; // aspect-[2/3] (200px) + title space (120px)
+const CARD_GAP = 16; // gap-4 in pixels
+const GRID_PADDING = 24; // p-6 in pixels
+
 export function ContentGrid({ items, onItemClick, onToggleFavorite, isLoading }: ContentGridProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0, columnCount: 4 });
+
+  // Calculate responsive column count based on width
+  const getColumnCount = (width: number): number => {
+    if (width >= 1536) return 6; // 2xl
+    if (width >= 1280) return 5; // xl
+    if (width >= 1024) return 4; // lg
+    if (width >= 768) return 3;  // md
+    return 2; // default
+  };
+
+  // Update dimensions on mount and window resize
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth;
+        const height = containerRef.current.offsetHeight;
+        const columnCount = getColumnCount(width);
+
+        setDimensions({ width, height, columnCount });
+      }
+    };
+
+    // Initial measurement
+    updateDimensions();
+
+    // Listen for resize
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -36,18 +80,48 @@ export function ContentGrid({ items, onItemClick, onToggleFavorite, isLoading }:
     );
   }
 
+  const { width, height, columnCount } = dimensions;
+  const rowCount = Math.ceil(items.length / columnCount);
+  const columnWidth = (width - GRID_PADDING * 2) / columnCount;
+
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 p-6">
-        {items.map((item, index) => (
-          <ContentCard
-            key={`${item.url}-${index}`}
-            item={item}
-            onClick={onItemClick}
-            onToggleFavorite={onToggleFavorite}
-          />
-        ))}
-      </div>
+    <div ref={containerRef} className="h-full w-full">
+      {width > 0 && height > 0 && (
+        <Grid
+          columnCount={columnCount}
+          columnWidth={columnWidth}
+          height={height}
+          rowCount={rowCount}
+          rowHeight={CARD_HEIGHT + CARD_GAP}
+          width={width}
+          overscanRowCount={2}
+          className="scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900"
+        >
+          {({ columnIndex, rowIndex, style }) => {
+            const index = rowIndex * columnCount + columnIndex;
+            if (index >= items.length) return null;
+
+            const item = items[index];
+            return (
+              <div
+                style={{
+                  ...style,
+                  left: Number(style.left) + GRID_PADDING + CARD_GAP / 2,
+                  top: Number(style.top) + GRID_PADDING,
+                  width: columnWidth - CARD_GAP,
+                  height: CARD_HEIGHT,
+                }}
+              >
+                <ContentCard
+                  item={item}
+                  onClick={onItemClick}
+                  onToggleFavorite={onToggleFavorite}
+                />
+              </div>
+            );
+          }}
+        </Grid>
+      )}
     </div>
   );
 }
@@ -78,7 +152,7 @@ const ContentCard = memo(function ContentCard({ item, onClick, onToggleFavorite 
   return (
     <div
       onClick={() => onClick(item)}
-      className="group cursor-pointer"
+      className="group cursor-pointer h-full flex flex-col"
     >
       <div className="relative aspect-[2/3] bg-gray-800 rounded-lg overflow-hidden
                     hover:ring-2 hover:ring-blue-500 transition-all">
@@ -142,12 +216,12 @@ const ContentCard = memo(function ContentCard({ item, onClick, onToggleFavorite 
       </div>
 
       {/* Title */}
-      <div className="mt-2">
+      <div className="mt-2 flex-1">
         <h3 className="text-sm font-medium text-white line-clamp-2 group-hover:text-blue-400 transition-colors">
           {item.title}
         </h3>
         {item.group && (
-          <p className="text-xs text-gray-500 mt-1">{item.group}</p>
+          <p className="text-xs text-gray-500 mt-1 line-clamp-1">{item.group}</p>
         )}
       </div>
     </div>

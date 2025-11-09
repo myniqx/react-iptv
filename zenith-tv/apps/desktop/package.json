@@ -14,22 +14,24 @@
     "start": "npm run dev"
   },
   "dependencies": {
-    "@zenith-tv/types": "workspace:*",
-    "@zenith-tv/protocol": "workspace:*",
-    "@zenith-tv/ui": "workspace:*",
     "@zenith-tv/parser": "workspace:*",
+    "@zenith-tv/protocol": "workspace:*",
+    "@zenith-tv/types": "workspace:*",
+    "@zenith-tv/ui": "workspace:*",
+    "better-sqlite3": "^11.7.0",
+    "clsx": "^2.1.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "zustand": "^5.0.2",
-    "clsx": "^2.1.1",
+    "react-window": "^2.2.3",
     "tailwind-merge": "^2.5.5",
-    "better-sqlite3": "^11.7.0"
+    "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.11.0",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.6",
+    "@types/react-window": "^2.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
     "cross-env": "^7.0.3",
