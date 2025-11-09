@@ -10,7 +10,7 @@ Cross-platform IPTV player development progress tracker.
 
 | Platform | Core | UI/UX | P2P Remote | Total |
 |----------|------|-------|------------|-------|
-| **Desktop** | 95% | 95% | 0% | **80%** |
+| **Desktop** | 100% | 95% | 0% | **85%** |
 | **Tizen TV** | 0% | 0% | 0% | **0%** |
 | **Android** | 0% | 0% | 0% | **0%** |
 
@@ -119,10 +119,10 @@ None currently
 #### Performance
 - ✅ Virtual scrolling (1000+ items)
 - ✅ Lazy load thumbnails (native loading="lazy")
-- ❌ Cache parsed M3U
+- ✅ Cache parsed M3U
 - ✅ Debounce search (300ms)
 - ✅ React.memo for ContentCard optimization
-- ❌ Optimize DB queries (indexes)
+- ✅ Optimize DB queries (indexes)
 
 ---
 
@@ -265,6 +265,11 @@ None currently
 - Virtual scrolling with react-window (handles 1000+ items)
 - Responsive grid with dynamic column calculation
 - ResizeObserver for automatic layout updates
+- M3U caching system (24-hour expiration)
+- ETag and Last-Modified header support
+- Force sync option to bypass cache
+- Automatic expired cache cleanup on startup
+- Database indexes for optimal query performance
 
 ### Tizen
 - Not started
