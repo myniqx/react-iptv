@@ -1,0 +1,20 @@
+{
+  "name": "zenith-parser",
+  "type": "module",
+  "collaborators": [
+    "myniqx"
+  ],
+  "description": "High-performance M3U parser for Zenith TV",
+  "version": "0.1.0",
+  "license": "MIT",
+  "files": [
+    "zenith_parser_bg.wasm",
+    "zenith_parser.js",
+    "zenith_parser.d.ts"
+  ],
+  "main": "zenith_parser.js",
+  "types": "zenith_parser.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

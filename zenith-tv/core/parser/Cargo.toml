@@ -6,6 +6,9 @@ authors = ["myniqx"]
 description = "High-performance M3U parser for Zenith TV"
 license = "MIT"
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 
@@ -25,15 +28,8 @@ lazy_static = "1.4"
 # Optional: For better performance
 memchr = "2.7"
 
-[dev-dependencies]
-criterion = "0.5"
-
 [profile.release]
 opt-level = 3
 lto = true
 codegen-units = 1
 strip = true
-
-[[bench]]
-name = "parser_bench"
-harness = false
