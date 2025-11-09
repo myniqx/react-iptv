@@ -7,7 +7,10 @@ interface ProfileManagerProps {
   onAddProfile: (url: string, name: string) => void;
   onSelectProfile: (profile: Profile) => void;
   onDeleteProfile: (id: number) => void;
+  onSyncProfile: (profile: Profile) => void;
   onClose: () => void;
+  syncProgress?: { stage: string; percent: number } | null;
+  isSyncing?: boolean;
 }
 
 export function ProfileManager({
@@ -16,7 +19,10 @@ export function ProfileManager({
   onAddProfile,
   onSelectProfile,
   onDeleteProfile,
+  onSyncProfile,
   onClose,
+  syncProgress,
+  isSyncing,
 }: ProfileManagerProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newUrl, setNewUrl] = useState('');
@@ -163,28 +169,74 @@ export function ProfileManager({
                       <p className="text-sm text-gray-400 font-mono truncate">
                         {profile.m3uUrl}
                       </p>
-                      {profile.itemCount !== undefined && (
-                        <p className="text-xs text-gray-500 mt-2">
-                          {profile.itemCount} items
-                        </p>
+
+                      <div className="flex items-center gap-3 mt-2">
+                        {profile.itemCount !== undefined && (
+                          <p className="text-xs text-gray-500">
+                            {profile.itemCount} items
+                          </p>
+                        )}
+                        {profile.lastSync && (
+                          <p className="text-xs text-gray-500">
+                            Last sync: {new Date(profile.lastSync).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Sync Progress */}
+                      {isSyncing && currentProfile?.id === profile.id && syncProgress && (
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                            <span>{syncProgress.stage}</span>
+                            <span>{Math.round(syncProgress.percent)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-700 rounded-full h-1.5">
+                            <div
+                              className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                              style={{ width: `${syncProgress.percent}%` }}
+                            />
+                          </div>
+                        </div>
                       )}
                     </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm(`Delete profile "${profile.name}"?`)) {
-                          onDeleteProfile(profile.id);
-                        }
-                      }}
-                      className="p-2 hover:bg-red-500/20 rounded-lg transition-colors
-                               text-gray-400 hover:text-red-400"
-                      title="Delete profile"
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSyncProfile(profile);
+                        }}
+                        disabled={isSyncing}
+                        className="p-2 hover:bg-blue-500/20 rounded-lg transition-colors
+                                 text-gray-400 hover:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Sync M3U playlist"
+                      >
+                        <svg
+                          className={`w-5 h-5 ${isSyncing && currentProfile?.id === profile.id ? 'animate-spin' : ''}`}
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
+                        </svg>
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Delete profile "${profile.name}"?`)) {
+                            onDeleteProfile(profile.id);
+                          }
+                        }}
+                        disabled={isSyncing}
+                        className="p-2 hover:bg-red-500/20 rounded-lg transition-colors
+                                 text-gray-400 hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Delete profile"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

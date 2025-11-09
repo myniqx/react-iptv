@@ -3,10 +3,11 @@ import type { WatchableItem } from '@zenith-tv/types';
 interface ContentGridProps {
   items: WatchableItem[];
   onItemClick: (item: WatchableItem) => void;
+  onToggleFavorite?: (url: string) => void;
   isLoading?: boolean;
 }
 
-export function ContentGrid({ items, onItemClick, isLoading }: ContentGridProps) {
+export function ContentGrid({ items, onItemClick, onToggleFavorite, isLoading }: ContentGridProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -38,7 +39,12 @@ export function ContentGrid({ items, onItemClick, isLoading }: ContentGridProps)
     <div className="h-full overflow-y-auto">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 p-6">
         {items.map((item, index) => (
-          <ContentCard key={`${item.url}-${index}`} item={item} onClick={onItemClick} />
+          <ContentCard
+            key={`${item.url}-${index}`}
+            item={item}
+            onClick={onItemClick}
+            onToggleFavorite={onToggleFavorite}
+          />
         ))}
       </div>
     </div>
@@ -48,9 +54,10 @@ export function ContentGrid({ items, onItemClick, isLoading }: ContentGridProps)
 interface ContentCardProps {
   item: WatchableItem;
   onClick: (item: WatchableItem) => void;
+  onToggleFavorite?: (url: string) => void;
 }
 
-function ContentCard({ item, onClick }: ContentCardProps) {
+function ContentCard({ item, onClick, onToggleFavorite }: ContentCardProps) {
   const getCategoryBadge = () => {
     if (item.category.type === 'live_stream') {
       return { text: 'LIVE', color: 'bg-red-500' };
@@ -108,13 +115,27 @@ function ContentCard({ item, onClick }: ContentCardProps) {
           {badge.text}
         </div>
 
-        {/* Favorite star */}
-        {item.isFavorite && (
-          <div className="absolute top-2 left-2 text-yellow-400">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        {/* Favorite button */}
+        {onToggleFavorite && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite(item.url);
+            }}
+            className="absolute top-2 left-2 p-1 rounded-full bg-black/50 hover:bg-black/70
+                     transition-colors z-10"
+            title={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <svg
+              className={`w-5 h-5 ${item.isFavorite ? 'text-yellow-400' : 'text-gray-400'}`}
+              fill={item.isFavorite ? 'currentColor' : 'none'}
+              stroke={item.isFavorite ? 'none' : 'currentColor'}
+              strokeWidth={item.isFavorite ? 0 : 2}
+              viewBox="0 0 24 24"
+            >
               <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
             </svg>
-          </div>
+          </button>
         )}
       </div>
 

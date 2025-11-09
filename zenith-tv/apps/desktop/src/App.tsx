@@ -18,12 +18,16 @@ function App() {
     addProfile,
     selectProfile,
     deleteProfile,
+    syncProfile,
+    isSyncing,
+    syncProgress,
   } = useProfilesStore();
 
   const {
     currentCategory,
     setCategory,
     getFilteredItems,
+    toggleFavorite,
     isLoading,
   } = useContentStore();
 
@@ -115,6 +119,7 @@ function App() {
               <ContentGrid
                 items={getFilteredItems()}
                 onItemClick={(item) => play(item)}
+                onToggleFavorite={toggleFavorite}
                 isLoading={isLoading}
               />
             </div>
@@ -138,7 +143,10 @@ function App() {
             setShowProfileManager(false);
           }}
           onDeleteProfile={deleteProfile}
+          onSyncProfile={syncProfile}
           onClose={() => setShowProfileManager(false)}
+          syncProgress={syncProgress}
+          isSyncing={isSyncing}
         />
       )}
     </div>
