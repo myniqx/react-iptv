@@ -10,7 +10,7 @@ Cross-platform IPTV player development progress tracker.
 
 | Platform | Core | UI/UX | P2P Remote | Total |
 |----------|------|-------|------------|-------|
-| **Desktop** | 40% | 60% | 0% | **35%** |
+| **Desktop** | 80% | 70% | 0% | **60%** |
 | **Tizen TV** | 0% | 0% | 0% | **0%** |
 | **Android** | 0% | 0% | 0% | **0%** |
 
@@ -43,26 +43,30 @@ Cross-platform IPTV player development progress tracker.
 
 #### State Management
 - ✅ Zustand stores (player, profiles, content)
-- ✅ Profile localStorage persistence (temporary)
+- ✅ SQLite database integration with stores
+- ✅ Profile sync with M3U fetch and parse
+
+#### M3U Integration
+- ✅ Fetch M3U from URL with progress tracking
+- ✅ Parse with Rust WASM
+- ✅ Save to SQLite with upsert
+- ✅ Detect new items
+- ✅ Update profile sync timestamp
+- ✅ Sync UI with progress indicator
 
 ### 🚧 In Progress
 
-#### M3U Integration
-- 🔄 Fetch M3U from URL
-- 🔄 Parse with Rust WASM
-- 🔄 Save to SQLite
-- 🔄 Detect new items
-- 🔄 Update profile sync
+None currently
 
 ### ❌ Pending Features
 
 #### Core Features
-- ❌ Replace mock data with DB data
-- ❌ Load items from SQLite by profile
-- ❌ Favorites toggle + DB persistence
-- ❌ Recent tracking (30-day window)
-- ❌ Watch history + resume playback
-- ❌ Auto-save video position
+- ✅ Replace mock data with DB data
+- ✅ Load items from SQLite by profile
+- ✅ Favorites toggle + DB persistence
+- ✅ Recent tracking (30-day window)
+- ✅ Watch history + resume playback
+- ✅ Auto-save video position
 - ❌ Series episode grouping
 - ❌ Season/Episode sorting
 
@@ -209,14 +213,14 @@ Cross-platform IPTV player development progress tracker.
 
 ## 🎯 Current Sprint (Phase 1)
 
-### Goals
+### Goals ✅ COMPLETE
 1. ✅ ~~Build Rust WASM parser~~
 2. ✅ ~~SQLite setup + schema~~
-3. 🔄 M3U fetch & parse integration
-4. ❌ Replace mock data with DB
-5. ❌ Favorites functionality
-6. ❌ Recent tracking
-7. ❌ Watch history + resume
+3. ✅ ~~M3U fetch & parse integration~~
+4. ✅ ~~Replace mock data with DB~~
+5. ✅ ~~Favorites functionality~~
+6. ✅ ~~Recent tracking~~
+7. ✅ ~~Watch history + resume~~
 
 ### Next Up (Phase 2)
 - Search & filter
@@ -235,9 +239,11 @@ Cross-platform IPTV player development progress tracker.
 
 ### Desktop
 - Using better-sqlite3 for native SQLite
-- WASM parser ready but not integrated yet
-- Profile manager uses localStorage (temporary)
-- Mock data in content store (needs replacement)
+- WASM parser integrated with M3U sync
+- Profile manager with sync button and progress indicator
+- DB-backed content store with favorites and watch history
+- Auto-resume playback from last position
+- Auto-save watch progress every 10 seconds
 
 ### Tizen
 - Not started
