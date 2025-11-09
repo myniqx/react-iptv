@@ -65,9 +65,20 @@ CREATE TABLE IF NOT EXISTS devices (
   last_seen DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- M3U cache table (for faster syncs)
+CREATE TABLE IF NOT EXISTS m3u_cache (
+  url TEXT PRIMARY KEY,
+  content TEXT NOT NULL,
+  etag TEXT,
+  last_modified TEXT,
+  cached_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  expires_at DATETIME NOT NULL
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_items_profile ON items(profile_id);
 CREATE INDEX IF NOT EXISTS idx_items_category ON items(category_type);
 CREATE INDEX IF NOT EXISTS idx_series_name ON series(series_name);
 CREATE INDEX IF NOT EXISTS idx_watch_history_watched ON watch_history(last_watched DESC);
 CREATE INDEX IF NOT EXISTS idx_recent_added ON recent_items(added_date DESC);
+CREATE INDEX IF NOT EXISTS idx_m3u_cache_expires ON m3u_cache(expires_at);

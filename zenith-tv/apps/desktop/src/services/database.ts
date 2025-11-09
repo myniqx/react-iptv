@@ -113,4 +113,34 @@ export const db = {
   async getWatchHistory(itemUrl: string) {
     return await window.electron.db.getWatchHistory(itemUrl);
   },
+
+  // M3U Cache
+  async getM3UCache(url: string): Promise<{
+    url: string;
+    content: string;
+    etag?: string;
+    last_modified?: string;
+    cached_at: string;
+    expires_at: string;
+  } | null> {
+    return await window.electron.db.getM3UCache(url);
+  },
+
+  async saveM3UCache(
+    url: string,
+    content: string,
+    etag?: string,
+    lastModified?: string,
+    expiresInHours: number = 24
+  ): Promise<void> {
+    return await window.electron.db.saveM3UCache(url, content, etag, lastModified, expiresInHours);
+  },
+
+  async invalidateM3UCache(url: string): Promise<void> {
+    return await window.electron.db.invalidateM3UCache(url);
+  },
+
+  async cleanExpiredCache(): Promise<void> {
+    return await window.electron.db.cleanExpiredCache();
+  },
 };

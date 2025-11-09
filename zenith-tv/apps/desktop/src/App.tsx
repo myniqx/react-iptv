@@ -9,6 +9,7 @@ import { useProfilesStore } from './stores/profiles';
 import { useContentStore } from './stores/content';
 import { usePlayerStore } from '@zenith-tv/ui/src/stores/player';
 import { useDebounce } from './hooks/useDebounce';
+import { db } from './services/database';
 
 function App() {
   const [showProfileManager, setShowProfileManager] = useState(false);
@@ -47,9 +48,17 @@ function App() {
 
   const { play } = usePlayerStore();
 
-  // Load profiles on mount
+  // Load profiles and clean cache on mount
   useEffect(() => {
-    loadProfiles();
+    const init = async () => {
+      // Clean expired cache entries
+      await db.cleanExpiredCache();
+
+      // Load profiles
+      await loadProfiles();
+    };
+
+    init();
   }, [loadProfiles]);
 
   // Show profile manager if no profiles exist

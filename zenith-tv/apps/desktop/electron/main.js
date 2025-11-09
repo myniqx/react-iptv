@@ -86,4 +86,12 @@ function setupIPCHandlers() {
     db.saveWatchProgress(itemUrl, position, duration)
   );
   ipcMain.handle('db:getWatchHistory', (_, itemUrl) => db.getWatchHistory(itemUrl));
+
+  // M3U Cache
+  ipcMain.handle('db:getM3UCache', (_, url) => db.getM3UCache(url));
+  ipcMain.handle('db:saveM3UCache', (_, url, content, etag, lastModified, expiresInHours) =>
+    db.saveM3UCache(url, content, etag, lastModified, expiresInHours)
+  );
+  ipcMain.handle('db:invalidateM3UCache', (_, url) => db.invalidateM3UCache(url));
+  ipcMain.handle('db:cleanExpiredCache', () => db.cleanExpiredCache());
 }

@@ -249,6 +249,55 @@ class ZenithDatabase {
   }
 
   /**
+   * Get M3U from cache
+   */
+  getM3UCache(url) {
+    const stmt = this.db.prepare(`
+      SELECT * FROM m3u_cache
+      WHERE url = ? AND datetime(expires_at) > datetime('now')
+    `);
+    return stmt.get(url);
+  }
+
+  /**
+   * Save M3U to cache
+   */
+  saveM3UCache(url, content, etag, lastModified, expiresInHours = 24) {
+    const stmt = this.db.prepare(`
+      INSERT INTO m3u_cache (url, content, etag, last_modified, expires_at)
+      VALUES (?, ?, ?, ?, datetime('now', '+' || ? || ' hours'))
+      ON CONFLICT(url) DO UPDATE SET
+        content = excluded.content,
+        etag = excluded.etag,
+        last_modified = excluded.last_modified,
+        cached_at = datetime('now'),
+        expires_at = excluded.expires_at
+    `);
+    stmt.run(url, content, etag, lastModified, expiresInHours);
+  }
+
+  /**
+   * Invalidate M3U cache for a URL
+   */
+  invalidateM3UCache(url) {
+    const stmt = this.db.prepare('DELETE FROM m3u_cache WHERE url = ?');
+    stmt.run(url);
+  }
+
+  /**
+   * Clean expired cache entries
+   */
+  cleanExpiredCache() {
+    const stmt = this.db.prepare(`
+      DELETE FROM m3u_cache WHERE datetime(expires_at) <= datetime('now')
+    `);
+    const result = stmt.run();
+    if (result.changes > 0) {
+      console.log(`[DB] Cleaned ${result.changes} expired cache entries`);
+    }
+  }
+
+  /**
    * Close database
    */
   close() {

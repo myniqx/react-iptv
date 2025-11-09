@@ -30,5 +30,12 @@ contextBridge.exposeInMainWorld('electron', {
     saveWatchProgress: (itemUrl, position, duration) =>
       ipcRenderer.invoke('db:saveWatchProgress', itemUrl, position, duration),
     getWatchHistory: (itemUrl) => ipcRenderer.invoke('db:getWatchHistory', itemUrl),
+
+    // M3U Cache
+    getM3UCache: (url) => ipcRenderer.invoke('db:getM3UCache', url),
+    saveM3UCache: (url, content, etag, lastModified, expiresInHours) =>
+      ipcRenderer.invoke('db:saveM3UCache', url, content, etag, lastModified, expiresInHours),
+    invalidateM3UCache: (url) => ipcRenderer.invoke('db:invalidateM3UCache', url),
+    cleanExpiredCache: () => ipcRenderer.invoke('db:cleanExpiredCache'),
   },
 });
