@@ -1,6 +1,7 @@
 import { memo, useState, useEffect, useRef } from 'react';
 import { FixedSizeGrid as Grid } from 'react-window';
 import type { WatchableItem } from '@zenith-tv/types';
+import { SkeletonGrid } from './SkeletonCard';
 
 interface ContentGridProps {
   items: WatchableItem[];
@@ -54,14 +55,7 @@ export function ContentGrid({ items, onItemClick, onToggleFavorite, isLoading }:
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Loading content...</p>
-        </div>
-      </div>
-    );
+    return <SkeletonGrid count={24} />;
   }
 
   if (items.length === 0) {
