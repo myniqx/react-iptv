@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { usePlayerStore } from '@zenith-tv/ui/src/stores/player';
 import { PlayerControls } from './PlayerControls';
+import { db } from '../services/database';
 
 export function VideoPlayer() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -72,6 +73,23 @@ export function VideoPlayer() {
 
     video.src = currentItem.url;
     setState('loading');
+
+    // Load watch history and resume from last position
+    const loadWatchHistory = async () => {
+      try {
+        const history = await db.getWatchHistory(currentItem.url);
+        if (history && history.position > 0 && history.position < history.duration - 10) {
+          // Resume if not at the beginning or near the end
+          video.addEventListener('loadedmetadata', () => {
+            video.currentTime = history.position;
+          }, { once: true });
+        }
+      } catch (error) {
+        console.error('Failed to load watch history:', error);
+      }
+    };
+
+    loadWatchHistory();
   }, [currentItem, setState]);
 
   // Update video volume and mute
@@ -82,6 +100,47 @@ export function VideoPlayer() {
     video.volume = volume;
     video.muted = isMuted;
   }, [volume, isMuted]);
+
+  // Auto-save watch progress
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !currentItem || state !== 'playing') return;
+
+    // Save progress every 10 seconds
+    const saveInterval = setInterval(async () => {
+      if (video.duration > 0) {
+        try {
+          await db.saveWatchProgress(currentItem.url, video.currentTime, video.duration);
+        } catch (error) {
+          console.error('Failed to save watch progress:', error);
+        }
+      }
+    }, 10000);
+
+    // Save on pause
+    const handlePause = async () => {
+      if (video.duration > 0) {
+        try {
+          await db.saveWatchProgress(currentItem.url, video.currentTime, video.duration);
+        } catch (error) {
+          console.error('Failed to save watch progress:', error);
+        }
+      }
+    };
+
+    video.addEventListener('pause', handlePause);
+
+    return () => {
+      clearInterval(saveInterval);
+      video.removeEventListener('pause', handlePause);
+
+      // Save progress on unmount
+      if (video.duration > 0) {
+        db.saveWatchProgress(currentItem.url, video.currentTime, video.duration)
+          .catch(err => console.error('Failed to save watch progress on unmount:', err));
+      }
+    };
+  }, [currentItem, state]);
 
   // Auto-hide controls
   useEffect(() => {
